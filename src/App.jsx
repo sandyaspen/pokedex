@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PokemonCard from './PokemonCard'
+import PokemonList from './PokemonList'
 import './App.css'
 
 function App() {
@@ -7,15 +8,26 @@ function App() {
   const [pokemon, setPokemon] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [pokemonList, setPokemonList] = useState([])
 
-  const searchPokemon = async () => {
-    if (!query) return
+  useEffect(() => {
+    const fetchPokemonList = async () => {
+      const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151')
+      const data = await res.json()
+      setPokemonList(data.results)
+    }
+    fetchPokemonList()  
+  }, [])
+
+  const searchPokemon = async (name) => {
+    const searchTerm = name || query
+    if (!searchTerm) return
     setLoading(true)
     setError(null)
     setPokemon(null)
 
     try {
-      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${query.toLowerCase()}`)
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${searchTerm.toLowerCase()}`)
       if (!res.ok) throw new Error("Pokémon not found")
       const data = await res.json()
       setPokemon(data)
@@ -47,10 +59,14 @@ function App() {
         </button>
       </div>
 
-      {loading && <p className="text-gray-500">Loading...</p>}
-      {error && <p className="text-red-500">{error}</p>}
-
-      {pokemon && (<PokemonCard pokemon={pokemon} />)}
+      <div className='flex gap-8 items-start'>
+        <PokemonList pokemonList={pokemonList} onSelect={searchPokemon} />
+        <div className='flex flex-col items-center'>
+          {loading && <p className="text-gray-500">Loading...</p>}
+          {error && <p className="text-red-500">{error}</p>}
+          {pokemon && (<PokemonCard pokemon={pokemon} />)}
+        </div>
+      </div>
     </div>
   )
 }
