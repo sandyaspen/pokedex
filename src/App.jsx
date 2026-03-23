@@ -9,12 +9,20 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [pokemonList, setPokemonList] = useState([])
+  const [filter, setFilter] = useState("")
+
+  //Derived State
+  const filteredList = pokemonList.filter(p => p.name.includes(filter.toLowerCase()))
 
   useEffect(() => {
     const fetchPokemonList = async () => {
       const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151')
       const data = await res.json()
-      setPokemonList(data.results)
+      const formatted_data = data.results.map((pokemon, index) => ({
+        name: pokemon.name,
+        id: index + 1
+      }))
+      setPokemonList(formatted_data)
     }
     fetchPokemonList()  
   }, [])
@@ -60,7 +68,7 @@ function App() {
       </div>
 
       <div className='flex gap-8 items-start'>
-        <PokemonList pokemonList={pokemonList} onSelect={searchPokemon} />
+        <PokemonList pokemonList={filteredList} onSelect={searchPokemon} filter={filter} onFilterChange={setFilter}/>
         <div className='flex flex-col items-center'>
           {loading && <p className="text-gray-500">Loading...</p>}
           {error && <p className="text-red-500">{error}</p>}
