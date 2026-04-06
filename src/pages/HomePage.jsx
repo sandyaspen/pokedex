@@ -1,25 +1,19 @@
-import PokemonList from '../components/PokemonList'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from "@tanstack/react-query"
+import PokemonList from '../components/PokemonList'
+import { fetchPokemonList } from "../api/pokemon"
 
 function HomePage() {
     const [query, setQuery] = useState('')
-    const [pokemonList, setPokemonList] = useState([])
     const [filter, setFilter] = useState('')
     const navigate = useNavigate()
 
-    useEffect(() => {
-        const fetchPokemonList = async () => {
-          const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151')
-          const data = await res.json()
-          const formatted_data = data.results.map((pokemon, index) => ({
-            name: pokemon.name,
-            id: index + 1
-          }))
-          setPokemonList(formatted_data)
-        }
-        fetchPokemonList()  
-      }, [])
+    const { data: pokemonList = [], isLoading, isError } = useQuery({
+        queryKey: ["pokemonList"],
+        queryFn: () => fetchPokemonList(),
+        staleTime: Infinity
+    })
 
     //Derived State
     const filteredList = pokemonList.filter(p => p.name.includes(filter.toLowerCase()))
